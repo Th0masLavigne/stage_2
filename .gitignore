@@ -3,3 +3,11 @@ __pycache__/
 *.h5
 *.msh
 *.csv
+
+# OS / editor noise, not project content
+.DS_Store
+.ipynb_checkpoints/
+
+# Office lock files (e.g. a slide deck living in this folder for interview prep)
+~$*.pptx
+~$*.docx
