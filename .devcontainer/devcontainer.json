@@ -1,0 +1,40 @@
+{
+  "name": "surroptim-fenicsx",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspace",
+
+  // Mount 1 (explicite) : le code source. VS Code mounterait la racine du repo
+  // par defaut meme sans cette ligne, mais on le rend explicite ici puisque le
+  // build "context" est ".." (racine du repo) et non "." (.devcontainer) --
+  // mieux vaut ne pas dependre du comportement implicite dans ce cas.
+  // consistency=cached : recommande sur Mac (bind mount via gRPC-FUSE/virtiofs),
+  // ameliore les perfs I/O sans risque ici (l'hote reste la source de verite).
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+
+  // Mount 2 (celui qui manquait) : le cache JIT de FFCX (~/.cache/fenics).
+  // dolfinx compile chaque forme UFL (masse, diffusion, futur residu radiatif,
+  // jacobienne) en code C via FFCX puis met le binaire en cache. Sans volume
+  // dedie, ce cache vit dans le conteneur ephemere : a chaque "Rebuild
+  // Container", tout est recompile, ce qui est lent sur Mac. Un volume nomme
+  // le fait persister entre rebuilds.
+  // A verifier au premier build : `echo $HOME` dans le conteneur (l'image
+  // officielle dolfinx tourne generalement en root -> /root, sinon ajuster
+  // le target ci-dessous en consequence).
+  "mounts": [
+    "source=surroptim-fenics-jit-cache,target=/root/.cache/fenics,type=volume"
+  ],
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "charliermarsh.ruff"
+      ]
+    }
+  },
+  "postCreateCommand": "python3 -m pytest tests/test_install.py -q"
+}

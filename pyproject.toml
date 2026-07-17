@@ -1,0 +1,156 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel", "setuptools_scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "surroptim"
+dynamic = ["version"]
+description = "Solveur EF thermique transitoire axisymetrique (dolfinx) avec couplage thermo-mecanique et identification de parametres (SciPy)."
+readme = "README.md"
+authors = [
+  { name = "Thomas Lavigne", email = "thomas.lavigne@polytechnique.edu" },
+]
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Intended Audience :: Science/Research",
+]
+
+# IMPORTANT : dolfinx / ufl / basix / ffcx / petsc4py / mpi4py ne sont volontairement
+# PAS listes ici. Ce ne sont pas des paquets pip "normaux" (dependances compilees
+# PETSc/MPI) : ils sont fournis par l'environnement d'execution (image Docker
+# ghcr.io/fenics/dolfinx/dolfinx:v0.11.0, ou un conda-forge equivalent). Le package
+# ne fait que les *utiliser*, il ne les *installe* pas. Un `pip install -e .` en
+# dehors de cet environnement echouera a l'import, ce qui est attendu.
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.13",
+    "matplotlib>=3.8",
+    "pyvista>=0.44",
+]
+
+# Install avec :
+# `pip install -e .[dev]`
+# `pip install -e .[docs]`
+# `pip install -e .[notebook]`
+# `pip install -e .[dev,docs,notebook]`
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.1",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.15.0",
+    "pre-commit>=4.5.1",
+    # Typing : a activer quand le projet aura une base de types stable (cf. discussion
+    # avec l'etudiant). Le laisser configure des maintenant ne coute rien.
+    "mypy>=1.13.0",
+]
+docs = [
+    "sphinx>=8.1.3",
+    "sphinx-autoapi>=3.6.1",
+    "myst-parser>=4.0.1",
+    "sphinx-autodoc-typehints>=3.0.1",
+    "sphinx-design>=0.6.1",
+    "sphinx-rtd-theme>=3.1.0",
+    "sphinx-copybutton>=0.5.2",
+]
+notebook = [
+    "jupyterlab>=4.2",
+    "ipykernel>=6.29",
+    "ipywidgets>=8.1",
+]
+
+# Requis pour une install `uv` :
+# uv sync --group dev --group docs
+[dependency-groups]
+dev = [
+    "pytest>=8.2.1",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.15.0",
+    "pre-commit>=4.5.1",
+    "mypy>=1.13.0",
+]
+docs = [
+    "sphinx>=8.1.3",
+    "sphinx-autoapi>=3.6.1",
+    "myst-parser>=4.0.1",
+    "sphinx-autodoc-typehints>=3.0.1",
+    "sphinx-design>=0.6.1",
+    "sphinx-rtd-theme>=3.1.0",
+    "sphinx-copybutton>=0.5.2",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/yourusername/surroptim"
+"Bug Tracker" = "https://github.com/yourusername/surroptim/issues"
+
+[tool.setuptools_scm]
+version_scheme = "calver-by-date"
+local_scheme = "node-and-date"
+fallback_version = "2026.07.17"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra"
+testpaths = ["tests"]
+markers = [
+    "install: tests d'environnement/installation, a executer en tout premier (avant tout test de physique).",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:petsc4py.*",
+    "ignore::DeprecationWarning:pkg_resources.*",
+]
+
+# --- CONFIGURATION RUFF (prete, a activer explicitement avec l'etudiant) ---
+[tool.ruff]
+line-length = 120
+# A ajuster a la version python reellement presente dans l'image Docker
+# (verifier avec `python3 --version` dans le conteneur).
+target-version = "py311"
+src = ["src"]
+exclude = [
+    "docs/",
+    "notebooks/",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint]
+# E/W: pycodestyle, F: Pyflakes, I: isort, N: pep8-naming, D: docstrings (Google)
+select = ["E", "W", "F", "I", "N", "D"]
+ignore = ["W191", "E101", "E111", "N817", "D203", "D206", "D213", "D300"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "tab"
+docstring-code-format = true
+
+# --- CONFIGURATION MYPY (optionnelle pour l'instant, cf. dev group) ---
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_configs = true
+warn_redundant_casts = true
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+omit = [
+    "tests/*",
+    "**/__init__.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+precision = 2
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+]
