@@ -30,6 +30,10 @@ dependencies = [
     "scipy>=1.13",
     "matplotlib>=3.8",
     "pyvista>=0.44",
+    # Utilise en repli par ensure_pyvista_colab() / le notebook de reference
+    # pour l'affichage offscreen (Xvfb est deja installe au niveau systeme
+    # dans le Dockerfile, ce paquet est le wrapper Python).
+    "pyvirtualdisplay>=3.0",
 ]
 
 # Install avec :
